@@ -77,7 +77,7 @@ meta name="generator" content="Mediroza CMS 1.4.2"
 
 The homepage itself returned HTTP 403 Forbidden, while these headers and tags were still disclosed, confirming the underlying stack without needing authenticated access.
 
-![](whois_screeenshot.png)
+![](whatweb_mediroza.png)
 
 ### 3.2 Finding 2 — Directory Listing Enabled on Restricted Folders
 
@@ -93,8 +93,8 @@ A Nikto scan against the target flagged the following:
   
 robots.txt was checked separately and was found to list /old/ as a disallowed path — the site owners had attempted to hide this folder from search engines, but it remained fully accessible and browsable to a direct visitor.
 
-![](whois_screeenshot.png)
-![](whois_screeenshot.png)
+![](robots_txt.png)
+![](old_mediroza.png)
 
 ### 3.3 Finding 3 — Username Enumeration on Login Page
 
@@ -112,8 +112,8 @@ RESPONSE: "Username not found"
 
 Because the application discloses this distinction, an attacker can enumerate valid accounts prior to a credential-stuffing or brute-force attempt, narrowing the attack surface considerably.
 
-![](whois_screeenshot.png)
-![](whois_screeenshot.png)
+![](burp1.png)
+![](burp2.png)
 
 ### 3.4 Finding 4 — SQL Injection — Authentication Bypass
 
@@ -146,8 +146,8 @@ Location: portal.php
 
 This is an unauthenticated, pre-authentication vulnerability requiring no valid credentials of any kind, and is the single most severe finding in this assessment.
 
-![](whois_screeenshot.png)
-![](whois_screeenshot.png)
+![](burp3.png)
+![](burp4.png)
 
 ### 3.5 Finding 5 — Confidential Patient PDF Reports Accessible
 
@@ -158,9 +158,9 @@ After bypassing authentication, the patient portal exposed downloadable lab repo
 ### Steps Taken
 Following the SQL injection bypass, the portal page listed downloadable report files, which were retrieved directly
 
-![](whois_screeenshot.png)
+![](lab_reports.png)
 
-###. 3.6 Finding 6 — Weak / Outdated PDF Encryption
+### 3.6 Finding 6 — Weak / Outdated PDF Encryption
 
 Risk Rating: High
 Location: patient_report PDFs
@@ -180,9 +180,13 @@ Report 3 did not crack with the built-in list. I switched to a larger wordlist (
 
 patient_report_3.pdf – !@#$%^
 
-![](whois_screeenshot.png)
-![](whois_screeenshot.png)
-![](whois_screeenshot.png)
+![](patient1_password.png)
+![](patient2_password.png)
+![](password_found.png)
+
+![](patient1.png)
+![](patient2.png)
+![](patient3.png)
 
 ### 3.7 Finding 7 — Exposed Database Backup — Staff Salaries and Shareholder Data
 
@@ -251,7 +255,7 @@ Note: the original backup also included personal email addresses, personal phone
 | 9	| Michael Roberts	| 6.0% |	Ordinary |
 | 10 |	Dr. Vikram Chetty	| 4.0% |	Preferential |
 
-![](whois_screeenshot.png)
+![](backup_mediroza.png)
 
 --
 
