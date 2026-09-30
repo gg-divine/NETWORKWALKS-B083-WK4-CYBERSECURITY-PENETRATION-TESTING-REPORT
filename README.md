@@ -20,7 +20,7 @@ The overall security posture of the target is poor. Multiple critical vulnerabil
 
 Overall Risk Rating: CRITICAL — Immediate remediation is recommended.
 
---
+---
 
 # 2. Scope and Methodology
 
@@ -48,7 +48,7 @@ I followed a structured black-box penetration testing methodology consisting of 
 ●	exiftool — reading file metadata
 ●	Claude (AI assistant) — methodology guidance, troubleshooting, and converting raw SQL dump data into readable tables
 
---
+---
 
 # 3. Findings and Proof of Exploitation
 
@@ -257,7 +257,7 @@ Note: the original backup also included personal email addresses, personal phone
 
 ![](backup_mediroza.png)
 
---
+---
 
 # 4. Full Attack Chain Summary
 
@@ -303,6 +303,8 @@ Remove or suppress version-revealing headers (Server, X-Powered-By) at the serve
 ●	Segment databases by business function (patient, HR, financial) with separate credentials.
 ●	Disable verbose SQL error output in production; log errors server-side only.
 ●	Given the scope of PII exposed (national ID numbers, health data), evaluate regulatory notification obligations under applicable data protection law (e.g. POPIA in South Africa) as part of incident response planning.
+
+---
 
 # 6. Conclusion
 This assessment found multiple, independently exploitable paths from an unauthenticated starting position to highly sensitive internal data — patient medical records, full staff PII and payroll data, and confidential shareholder ownership information. No sophisticated tools or specialised knowledge were required to identify or exploit any of these findings. All vulnerabilities in this report are well-known, well-documented vulnerability classes with established, standard fixes. I recommend the client address all Critical and High findings immediately before this system is used to store or serve real patient data.
