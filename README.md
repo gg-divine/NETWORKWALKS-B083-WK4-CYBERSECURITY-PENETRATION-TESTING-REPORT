@@ -234,3 +234,75 @@ The file was opened as plain text and the staff and shareholders INSERT statemen
 | 29 |	Peter van Wyk	| Procurement Officer |	Supply Chain |	38,000 |
 | 30 |	Andile Mbeki |	Ward Clerk |	Administration |	21,000 |
 
+Note: the original backup also included personal email addresses, personal phone numbers, and South African national ID numbers for every employee, which are omitted from this table but present in the underlying evidence file. National ID numbers in particular represent a significant identity-theft risk and should be treated as highly sensitive PII in the impact assessment.
+
+### Shareholders Table (10 records) — Name, Share %, Share Class
+
+| **\#** |	**Shareholder Name** |	**Share %**  |	**Share Class** |
+| ------ | -------------------- | ----------- | --------------- |
+| 1 |	Dr. Rajesh Naidoo	| 18.0%	Ordinary
+| 2	| Cedar Health Holdings (Pty)  Ltd | 15.0% |	Ordinary |
+| 3	| Dr. Johan van der Merwe	| 12.0%	| Ordinary |
+| 4	| Reddy Family Trust	| 11.0%	| Ordinary |
+| 5	| Thabo Molefe	| 10.0% | Ordinary |
+| 6	| Sarah Botha	| 9.0% | Ordinary |
+| 7	| Dr. Ahmed Kara	| 8.0% | Preferential |
+| 8	| Naledi Zulu	| 7.0%	| Ordinary |
+| 9	| Michael Roberts	| 6.0% |	Ordinary |
+| 10 |	Dr. Vikram Chetty	| 4.0% |	Preferential |
+
+![](whois_screeenshot.png)
+
+--
+
+# 4. Full Attack Chain Summary
+
+The following shows the complete, independent paths used to reach the confidential data, and how the findings relate to one another.
+
+●	Step 1: robots.txt and a Nikto scan both identified /patient/, /staff/, and /old/ as accessible, indexed directories on the server. (Finding 2)
+●	Step 2: the patient login page returned a distinct "Username not found" message for an invalid username, confirming a username enumeration weakness. (Finding 3)
+●	Step 3: a single quote in the username field triggered a raw MySQL syntax error, confirming the field was vulnerable to SQL injection. (Finding 4)
+●	Step 4: the payload admin'-- - bypassed the login entirely, returning a 302 redirect into the authenticated patient portal with no valid credentials. (Finding 4)
+●	Step 5: the portal exposed downloadable patient lab report PDFs, which were retrieved. (Finding 5)
+●	Step 6: the PDFs used outdated RC4-128 encryption; password recovery was attempted against the files directly. (Finding 6)
+●	Step 7: independently of the login bypass, the open directory listing on /old/ (Finding 2) exposed a forgotten database backup file. (Finding 7)
+●	Step 8: the backup contained the salaries, personal details, and national ID numbers of all 30 staff, and the full shareholding structure of the hospital's 10 shareholders in plain text. (Finding 7)
+
+Note: unlike a scenario where the backup location is discovered only via a metadata clue inside a cracked PDF, in this assessment the /old/ directory was identified directly through reconnaissance (Nikto and robots.txt), independently of the PDF-cracking path. Both routes converge on the same underlying failure: sensitive files stored inside the public web root with no access control.
+
+# 5. Recommendations and Remediation
+   
+### 5.1 Fix Directory Listing and Remove the Backup
+
+Disable directory listing on all folders (Apache/LiteSpeed: add Options -Indexes, or the equivalent LiteSpeed directive, to the server configuration or .htaccess). Delete the database backup from /old/ immediately. Backups must never be stored inside the public web root — store them in a private, access-controlled location with no public HTTP exposure.
+
+### 5.2 Fix SQL Injection
+
+Replace the current login query with a parameterised query or prepared statement. This separates SQL code from user input so that no crafted input can alter the query structure. This is the single most important fix in this report.
+
+// Safe example using PHP PDO prepared statement
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+$stmt->execute([$username, $password]);
+
+### 5.3 Fix Username Enumeration
+
+Return a single generic message for any failed login attempt, regardless of whether the username or password was incorrect — for example: "Invalid username or password." Ensure response timing is also consistent between both failure cases.
+
+### 5.4 Fix PDF Access and Password Strength
+Move PDF files outside the web root so they cannot be served directly by the web server. Enforce access through a server-side script that checks authentication and authorisation before serving any file. Where password protection is still used, enforce AES-256 (PDF revision 6) rather than legacy RC4, and require a minimum password length of 12 characters with a mix of character types.
+
+### 5.5 Suppress Version and Server Banners
+Remove or suppress version-revealing headers (Server, X-Powered-By) at the server configuration level, and strip CMS generator meta tags from rendered HTML output. This does not replace patching, but slows attacker reconnaissance.
+
+### 5.6 General
+●	Apply least-privilege database accounts, so a single injection point cannot reach unrelated tables such as staff or shareholders.
+●	Segment databases by business function (patient, HR, financial) with separate credentials.
+●	Disable verbose SQL error output in production; log errors server-side only.
+●	Given the scope of PII exposed (national ID numbers, health data), evaluate regulatory notification obligations under applicable data protection law (e.g. POPIA in South Africa) as part of incident response planning.
+
+# 6. Conclusion
+This assessment found multiple, independently exploitable paths from an unauthenticated starting position to highly sensitive internal data — patient medical records, full staff PII and payroll data, and confidential shareholder ownership information. No sophisticated tools or specialised knowledge were required to identify or exploit any of these findings. All vulnerabilities in this report are well-known, well-documented vulnerability classes with established, standard fixes. I recommend the client address all Critical and High findings immediately before this system is used to store or serve real patient data.
+
+Submitted by: Divine Oses-Oyedoh
+Organisation: Networkwalks
+Batch: B083 | Week 4 Capstone Project.
